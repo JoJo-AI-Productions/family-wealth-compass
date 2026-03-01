@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Transaction } from '@/types/finance';
 import { format, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
@@ -17,6 +17,51 @@ const COLORS = [
   'hsl(350, 65%, 50%)',
   'hsl(30, 60%, 50%)',
 ];
+
+const RADIAN = Math.PI / 180;
+
+const renderCustomLabel = ({
+  cx, cy, midAngle, innerRadius, outerRadius, name, percent
+}: any) => {
+  const radius = outerRadius + 8;
+  const x1 = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y1 = cy + radius * Math.sin(-midAngle * RADIAN);
+  
+  const lineEnd = outerRadius + 30;
+  const x2 = cx + lineEnd * Math.cos(-midAngle * RADIAN);
+  const y2 = cy + lineEnd * Math.sin(-midAngle * RADIAN);
+  
+  const textAnchor = x2 > cx ? 'start' : 'end';
+  const x3 = x2 + (x2 > cx ? 8 : -8);
+
+  return (
+    <g>
+      <circle cx={x1} cy={y1} r={2.5} fill="hsl(var(--foreground))" />
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--muted-foreground))" strokeWidth={1} />
+      <text
+        x={x3}
+        y={y2}
+        textAnchor={textAnchor}
+        dominantBaseline="central"
+        fontSize={11}
+        fill="hsl(var(--foreground))"
+        fontWeight={500}
+      >
+        {name}
+      </text>
+      <text
+        x={x3}
+        y={y2 + 14}
+        textAnchor={textAnchor}
+        dominantBaseline="central"
+        fontSize={10}
+        fill="hsl(var(--muted-foreground))"
+      >
+        {(percent * 100).toFixed(0)}%
+      </text>
+    </g>
+  );
+};
 
 export default function ExpenseChart({ transactions }: ExpenseChartProps) {
   const now = new Date();
@@ -67,17 +112,19 @@ export default function ExpenseChart({ transactions }: ExpenseChartProps) {
       {/* Pie Chart */}
       {pieData.length > 0 && (
         <div className="rounded-2xl bg-card p-4 shadow-card">
-          <h3 className="text-sm font-semibold mb-3 text-foreground">支出占比</h3>
-          <ResponsiveContainer width="100%" height={200}>
+      <h3 className="text-sm font-semibold mb-3 text-foreground">支出占比</h3>
+          <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
-                outerRadius={80}
+                innerRadius={45}
+                outerRadius={70}
                 paddingAngle={2}
                 dataKey="value"
+                label={renderCustomLabel}
+                labelLine={false}
               >
                 {pieData.map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -86,14 +133,6 @@ export default function ExpenseChart({ transactions }: ExpenseChartProps) {
               <Tooltip formatter={(value: number) => `¥${value.toLocaleString()}`} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {pieData.map((item, i) => (
-              <span key={item.name} className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                {item.name}
-              </span>
-            ))}
-          </div>
         </div>
       )}
     </div>
