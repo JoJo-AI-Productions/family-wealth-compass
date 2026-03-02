@@ -47,17 +47,7 @@ const renderCustomLabel = ({
         fill="hsl(var(--foreground))"
         fontWeight={500}
       >
-        {name}
-      </text>
-      <text
-        x={x3}
-        y={y2 + 14}
-        textAnchor={textAnchor}
-        dominantBaseline="central"
-        fontSize={10}
-        fill="hsl(var(--muted-foreground))"
-      >
-        {(percent * 100).toFixed(0)}%
+        {name}({(percent * 100).toFixed(0)}%)
       </text>
     </g>
   );
