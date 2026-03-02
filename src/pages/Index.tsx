@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BarChart3, Plus, List, Settings } from 'lucide-react';
-import { useFinanceStore } from '@/hooks/useFinanceStore';
+import { useFinanceStore } from '@/contexts/FinanceContext';
 import { useFinanceStats, TimePeriod } from '@/hooks/useFinanceStats';
 import PeriodTabs from '@/components/finance/PeriodTabs';
 import SummaryCards from '@/components/finance/SummaryCards';
