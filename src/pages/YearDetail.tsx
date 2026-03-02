@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useFinanceStore } from '@/hooks/useFinanceStore';
+import { useFinanceStore } from '@/contexts/FinanceContext';
 import { Transaction, TransactionType } from '@/types/finance';
 import {
   format,
@@ -185,27 +185,27 @@ export default function YearDetail() {
 
           {/* Monthly totals */}
           <div className="mt-4 pt-4 border-t border-border/50">
-            <h4 className="text-center text-xs font-semibold text-muted-foreground mb-2">
+            <h4 className="text-center text-sm font-semibold text-muted-foreground mb-3">
               {format(selectedDate, 'M月')} 总收支
             </h4>
             <div className="flex items-center justify-center gap-6">
               <div className="text-center">
                 <span className="text-xs text-muted-foreground">总支出</span>
                 <div>
-                  <span className="text-lg font-bold text-success">
+                  <span className="text-2xl font-bold text-success">
                     {(monthlyData[format(selectedDate, 'yyyy-MM')]?.expense || 0).toLocaleString()}
                   </span>
-                  <span className="text-xs text-muted-foreground ml-0.5">元</span>
+                  <span className="text-sm text-muted-foreground ml-0.5">元</span>
                 </div>
               </div>
-              <div className="w-px h-6 bg-border" />
+              <div className="w-px h-8 bg-border" />
               <div className="text-center">
                 <span className="text-xs text-muted-foreground">总收入</span>
                 <div>
-                  <span className="text-lg font-bold text-primary">
+                  <span className="text-2xl font-bold text-primary">
                     {(monthlyData[format(selectedDate, 'yyyy-MM')]?.income || 0).toLocaleString()}
                   </span>
-                  <span className="text-xs text-muted-foreground ml-0.5">元</span>
+                  <span className="text-sm text-muted-foreground ml-0.5">元</span>
                 </div>
               </div>
             </div>
@@ -237,7 +237,10 @@ export default function YearDetail() {
               return (
                 <button
                   key={dateStr}
-                  onClick={() => setSelectedDate(day)}
+                  onClick={() => {
+                    setSelectedDate(day);
+                    navigate(`/day-detail?date=${dateStr}`);
+                  }}
                   className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all relative ${
                     isSelected
                       ? 'gradient-warm text-primary-foreground shadow-float'
