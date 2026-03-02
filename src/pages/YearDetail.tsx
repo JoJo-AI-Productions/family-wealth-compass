@@ -154,31 +154,61 @@ export default function YearDetail() {
         {/* Selected date summary card */}
         <div className="rounded-2xl bg-card p-5 shadow-card mb-6">
           <h3 className="text-center text-sm font-semibold text-muted-foreground mb-3">
-            {format(selectedDate, 'M月d日')}
+            {format(selectedDate, 'M月d日')} 收支情况
           </h3>
           <div className="flex items-center justify-center gap-6">
             <div className="text-center">
-              <span className="text-2xl font-bold text-destructive">
-                {selectedStats.expense.toLocaleString()}
-              </span>
-              <span className="text-sm text-muted-foreground ml-0.5">元</span>
+              <span className="text-xs text-muted-foreground">支出</span>
+              <div>
+                <span className="text-2xl font-bold text-success">
+                  {selectedStats.expense.toLocaleString()}
+                </span>
+                <span className="text-sm text-muted-foreground ml-0.5">元</span>
+              </div>
             </div>
             <div className="w-px h-8 bg-border" />
             <div className="text-center">
-              <span className="text-2xl font-bold text-success">
-                {selectedStats.income.toLocaleString()}
-              </span>
-              <span className="text-sm text-muted-foreground ml-0.5">元</span>
+              <span className="text-xs text-muted-foreground">收入</span>
+              <div>
+                <span className="text-2xl font-bold text-primary">
+                  {selectedStats.income.toLocaleString()}
+                </span>
+                <span className="text-sm text-muted-foreground ml-0.5">元</span>
+              </div>
             </div>
           </div>
           <div className="flex justify-center mt-3">
-            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
-              selectedStats.balance >= 0
-                ? 'bg-success/15 text-success'
-                : 'bg-destructive/15 text-destructive'
-            }`}>
-              {selectedStats.balance >= 0 ? '+' : ''}{selectedStats.balance.toLocaleString()}元
+            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/15 text-primary`}>
+              结余: {selectedStats.balance >= 0 ? '+' : ''}{selectedStats.balance.toLocaleString()}元
             </span>
+          </div>
+
+          {/* Monthly totals */}
+          <div className="mt-4 pt-4 border-t border-border/50">
+            <h4 className="text-center text-xs font-semibold text-muted-foreground mb-2">
+              {format(selectedDate, 'M月')} 总收支
+            </h4>
+            <div className="flex items-center justify-center gap-6">
+              <div className="text-center">
+                <span className="text-xs text-muted-foreground">总支出</span>
+                <div>
+                  <span className="text-lg font-bold text-success">
+                    {(monthlyData[format(selectedDate, 'yyyy-MM')]?.expense || 0).toLocaleString()}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-0.5">元</span>
+                </div>
+              </div>
+              <div className="w-px h-6 bg-border" />
+              <div className="text-center">
+                <span className="text-xs text-muted-foreground">总收入</span>
+                <div>
+                  <span className="text-lg font-bold text-primary">
+                    {(monthlyData[format(selectedDate, 'yyyy-MM')]?.income || 0).toLocaleString()}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-0.5">元</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -231,15 +261,15 @@ export default function YearDetail() {
           <h3 className="text-sm font-semibold text-foreground mb-3">年度汇总</h3>
           <div className="flex justify-between items-center py-2 border-b border-border/50">
             <span className="text-sm text-muted-foreground">总收入</span>
-            <span className="text-sm font-bold text-success">¥{yearTotals.income.toLocaleString()}</span>
+            <span className="text-sm font-bold text-primary">¥{yearTotals.income.toLocaleString()}</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-border/50">
             <span className="text-sm text-muted-foreground">总支出</span>
-            <span className="text-sm font-bold text-destructive">¥{yearTotals.expense.toLocaleString()}</span>
+            <span className="text-sm font-bold text-success">¥{yearTotals.expense.toLocaleString()}</span>
           </div>
           <div className="flex justify-between items-center py-2">
             <span className="text-sm text-muted-foreground">结余</span>
-            <span className={`text-sm font-bold ${yearTotals.income - yearTotals.expense >= 0 ? 'text-success' : 'text-destructive'}`}>
+            <span className="text-sm font-bold text-primary">
               ¥{(yearTotals.income - yearTotals.expense).toLocaleString()}
             </span>
           </div>
@@ -263,7 +293,7 @@ export default function YearDetail() {
                       {tx.note && <p className="text-xs text-muted-foreground">{tx.note}</p>}
                     </div>
                   </div>
-                  <span className={`text-sm font-bold ${tx.type === 'expense' ? 'text-destructive' : 'text-success'}`}>
+                  <span className={`text-sm font-bold ${tx.type === 'expense' ? 'text-success' : 'text-primary'}`}>
                     {tx.type === 'expense' ? '-' : '+'}¥{tx.amount.toLocaleString()}
                   </span>
                 </div>

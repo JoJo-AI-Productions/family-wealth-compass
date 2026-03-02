@@ -11,8 +11,8 @@ export default function SummaryCards({ totalExpense, totalIncome, balance, perio
   const navigate = useNavigate();
 
   const cards = [
-    { label: `${periodLabel}支出`, value: totalExpense, className: 'text-primary', clickable: true, type: 'expense' as const },
-    { label: `${periodLabel}收入`, value: totalIncome, className: 'text-success', clickable: true, type: 'income' as const },
+    { label: `${periodLabel}支出`, value: totalExpense, className: 'text-success', clickable: true, type: 'expense' as const },
+    { label: `${periodLabel}收入`, value: totalIncome, className: 'text-primary', clickable: true, type: 'income' as const },
     { label: '结余', value: balance, className: balance >= 0 ? 'text-foreground' : 'text-destructive', clickable: false, type: null },
   ];
 
