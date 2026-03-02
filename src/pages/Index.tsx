@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BarChart3, Plus, List, Settings } from 'lucide-react';
 import { useFinanceStore } from '@/hooks/useFinanceStore';
 import { useFinanceStats, TimePeriod } from '@/hooks/useFinanceStats';
-import { generateMockData } from '@/data/mockData';
 import PeriodTabs from '@/components/finance/PeriodTabs';
 import SummaryCards from '@/components/finance/SummaryCards';
 import CategoryBar from '@/components/finance/CategoryBar';
@@ -22,13 +21,6 @@ const Index = () => {
 
   const stats = useFinanceStats(store.transactions, period);
 
-  // Load mock data on first visit
-  useEffect(() => {
-    if (store.transactions.length === 0) {
-      const mocks = generateMockData();
-      mocks.forEach(m => store.addTransaction(m));
-    }
-  }, []);
 
   const handleEdit = (tx: Transaction) => {
     setEditingTx(tx);
