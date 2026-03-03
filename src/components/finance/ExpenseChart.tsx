@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Transaction } from '@/types/finance';
 import { format, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
@@ -34,21 +34,35 @@ const renderCustomLabel = ({
   const textAnchor = x2 > cx ? 'start' : 'end';
   const x3 = x2 + (x2 > cx ? 8 : -8);
 
+  const labelText = `${name}(${(percent * 100).toFixed(0)}%)`;
+  
+  // Split into two lines if text is long
+  const maxChars = 8;
+  let lines: string[] = [];
+  if (labelText.length > maxChars) {
+    lines = [name, `(${(percent * 100).toFixed(0)}%)`];
+  } else {
+    lines = [labelText];
+  }
+
   return (
     <g>
       <circle cx={x1} cy={y1} r={2.5} fill="hsl(var(--foreground))" />
       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--muted-foreground))" strokeWidth={1} />
-      <text
-        x={x3}
-        y={y2}
-        textAnchor={textAnchor}
-        dominantBaseline="central"
-        fontSize={11}
-        fill="hsl(var(--foreground))"
-        fontWeight={500}
-      >
-        {name}({(percent * 100).toFixed(0)}%)
-      </text>
+      {lines.map((line, i) => (
+        <text
+          key={i}
+          x={x3}
+          y={y2 + i * 14}
+          textAnchor={textAnchor}
+          dominantBaseline="central"
+          fontSize={11}
+          fill="hsl(var(--foreground))"
+          fontWeight={500}
+        >
+          {line}
+        </text>
+      ))}
     </g>
   );
 };
@@ -68,7 +82,7 @@ export default function ExpenseChart({ transactions }: ExpenseChartProps) {
       const dayIncome = transactions
         .filter(t => t.type === 'income' && format(new Date(t.date), 'yyyy-MM-dd') === dateStr)
         .reduce((s, t) => s + t.amount, 0);
-      return { date: format(day, 'dd'), expense: dayExpense, income: dayIncome };
+      return { date: format(day, 'M/dd'), expense: dayExpense, income: dayIncome };
     });
   }, [transactions]);
 
@@ -88,8 +102,8 @@ export default function ExpenseChart({ transactions }: ExpenseChartProps) {
         <ResponsiveContainer width="100%" height={180}>
           <LineChart data={lineData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(30, 30%, 88%)" />
-            <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(20, 10%, 50%)" />
-            <YAxis tick={{ fontSize: 10 }} stroke="hsl(20, 10%, 50%)" />
+            <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(20, 10%, 50%)" label={{ value: '日期', position: 'insideBottomRight', offset: -5, fontSize: 10 }} />
+            <YAxis tick={{ fontSize: 10 }} stroke="hsl(20, 10%, 50%)" label={{ value: '金额(¥)', angle: -90, position: 'insideLeft', fontSize: 10 }} />
             <Tooltip
               contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
             />
@@ -102,15 +116,15 @@ export default function ExpenseChart({ transactions }: ExpenseChartProps) {
       {/* Pie Chart */}
       {pieData.length > 0 && (
         <div className="rounded-2xl bg-card p-4 shadow-card">
-      <h3 className="text-sm font-semibold mb-3 text-foreground">支出占比</h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <h3 className="text-sm font-semibold mb-3 text-foreground">支出占比</h3>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                innerRadius={45}
-                outerRadius={70}
+                innerRadius={40}
+                outerRadius={65}
                 paddingAngle={2}
                 dataKey="value"
                 label={renderCustomLabel}

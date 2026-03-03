@@ -157,7 +157,7 @@ const Index = () => {
             </div>
 
             <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
-              <h3 className="text-sm font-semibold mb-3 text-foreground">自定义分类</h3>
+              <h3 className="text-sm font-semibold mb-3 text-foreground">支出分类管理</h3>
               <div className="space-y-2">
                 {store.categories.filter(c => c.type === 'expense').map(c => (
                   <div key={c.id} className="flex items-center justify-between py-1">
@@ -181,6 +181,36 @@ const Index = () => {
                 className="mt-3 text-sm text-primary font-medium hover:underline"
               >
                 + 添加支出分类
+              </button>
+            </div>
+
+            {/* Account management */}
+            <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
+              <h3 className="text-sm font-semibold mb-3 text-foreground">账户分类管理</h3>
+              <div className="space-y-2">
+                {store.accounts.map(a => (
+                  <div key={a.id} className="flex items-center justify-between py-1">
+                    <span className="text-sm">{a.icon} {a.name}</span>
+                    <button
+                      onClick={() => store.deleteAccount(a.id)}
+                      className="text-xs text-destructive hover:underline"
+                    >
+                      删除
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  const name = prompt('输入新账户名称（如：信用卡）：');
+                  if (name) {
+                    const icon = prompt('输入账户图标（如：💳）：') || '💳';
+                    store.addAccount({ name, icon });
+                  }
+                }}
+                className="mt-3 text-sm text-primary font-medium hover:underline"
+              >
+                + 添加账户
               </button>
             </div>
           </div>

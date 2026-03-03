@@ -3,6 +3,7 @@ import {
   FinanceState,
   Transaction,
   Category,
+  Account,
   ExpenseThresholds,
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
@@ -47,6 +48,8 @@ interface FinanceContextValue extends FinanceState {
   deleteTransaction: (id: string) => void;
   addCategory: (cat: Omit<Category, 'id'>) => void;
   deleteCategory: (id: string) => void;
+  addAccount: (acc: Omit<Account, 'id'>) => void;
+  deleteAccount: (id: string) => void;
   setThresholds: (thresholds: ExpenseThresholds) => void;
   getExpenseTag: (amount: number) => 'normal' | 'large' | 'xlarge';
 }
@@ -117,6 +120,20 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const addAccount = useCallback((acc: Omit<Account, 'id'>) => {
+    setState(prev => ({
+      ...prev,
+      accounts: [...prev.accounts, { ...acc, id: generateId() }],
+    }));
+  }, []);
+
+  const deleteAccount = useCallback((id: string) => {
+    setState(prev => ({
+      ...prev,
+      accounts: prev.accounts.filter(a => a.id !== id),
+    }));
+  }, []);
+
   const setThresholds = useCallback((thresholds: ExpenseThresholds) => {
     setState(prev => ({ ...prev, thresholds }));
   }, []);
@@ -135,6 +152,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       deleteTransaction,
       addCategory,
       deleteCategory,
+      addAccount,
+      deleteAccount,
       setThresholds,
       getExpenseTag,
     }}>
