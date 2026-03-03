@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 import { Transaction, Category, Account } from '@/types/finance';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -20,13 +19,36 @@ interface TransactionFormProps {
 export default function TransactionForm({
   open, onClose, onSave, categories, accounts, editingTransaction, onUpdate
 }: TransactionFormProps) {
-  const [type, setType] = useState<'income' | 'expense'>(editingTransaction?.type || 'expense');
-  const [amount, setAmount] = useState(editingTransaction?.amount?.toString() || '');
-  const [category, setCategory] = useState(editingTransaction?.category || '');
-  const [date, setDate] = useState(editingTransaction ? format(new Date(editingTransaction.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
-  const [note, setNote] = useState(editingTransaction?.note || '');
-  const [account, setAccount] = useState(editingTransaction?.account || accounts[0]?.name || '');
-  const [isFixed, setIsFixed] = useState(editingTransaction?.isFixed || false);
+  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('');
+  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [note, setNote] = useState('');
+  const [account, setAccount] = useState(accounts[0]?.name || '');
+  const [isFixed, setIsFixed] = useState(false);
+
+  // Reset form when dialog opens or editingTransaction changes
+  useEffect(() => {
+    if (open) {
+      if (editingTransaction) {
+        setType(editingTransaction.type);
+        setAmount(editingTransaction.amount.toString());
+        setCategory(editingTransaction.category);
+        setDate(format(new Date(editingTransaction.date), 'yyyy-MM-dd'));
+        setNote(editingTransaction.note || '');
+        setAccount(editingTransaction.account || accounts[0]?.name || '');
+        setIsFixed(editingTransaction.isFixed || false);
+      } else {
+        setType('expense');
+        setAmount('');
+        setCategory('');
+        setDate(format(new Date(), 'yyyy-MM-dd'));
+        setNote('');
+        setAccount(accounts[0]?.name || '');
+        setIsFixed(false);
+      }
+    }
+  }, [open, editingTransaction]);
 
   const filteredCategories = categories.filter(c => c.type === type);
 
@@ -47,11 +69,6 @@ export default function TransactionForm({
       onSave(tx);
     }
     onClose();
-    // Reset
-    setAmount('');
-    setCategory('');
-    setNote('');
-    setIsFixed(false);
   };
 
   return (
@@ -103,7 +120,7 @@ export default function TransactionForm({
               <button
                 key={c.id}
                 onClick={() => setCategory(c.name)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
                   category === c.name
                     ? 'gradient-warm text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-accent/20'
@@ -118,12 +135,12 @@ export default function TransactionForm({
         {/* Account */}
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs">账户</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {accounts.map(a => (
               <button
                 key={a.id}
                 onClick={() => setAccount(a.name)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
                   account === a.name
                     ? 'gradient-warm text-primary-foreground'
                     : 'bg-muted text-muted-foreground'

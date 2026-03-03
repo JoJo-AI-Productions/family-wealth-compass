@@ -28,7 +28,7 @@ export default function SummaryCards({ totalExpense, totalIncome, balance, perio
         >
           <span className="text-xs text-muted-foreground">{card.label}</span>
           <span className={`mt-1 text-2xl font-bold ${card.className}`}>
-            {Math.abs(card.value).toLocaleString()}
+            {card.type === 'expense' ? `-${Math.abs(card.value).toLocaleString()}` : card.type === 'income' ? `+${Math.abs(card.value).toLocaleString()}` : (card.value >= 0 ? '+' : '-') + Math.abs(card.value).toLocaleString()}
           </span>
         </div>
       ))}

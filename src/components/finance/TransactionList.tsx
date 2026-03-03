@@ -47,8 +47,8 @@ export default function TransactionList({ transactions, onEdit, onDelete, getExp
                 {tx.note && <span className="text-xs text-muted-foreground truncate">· {tx.note}</span>}
               </div>
             </div>
-            <span className={`font-bold text-base ${tx.type === 'income' ? 'text-success' : 'text-foreground'}`}>
-              {tx.type === 'income' ? '+' : '-'}{tx.amount.toLocaleString()}
+            <span className={`font-bold text-base ${tx.type === 'income' ? 'text-primary' : 'text-success'}`}>
+              {tx.type === 'income' ? '+' : '-'}¥{tx.amount.toLocaleString()}
             </span>
             <div className="flex gap-1 shrink-0">
               <button onClick={() => onEdit(tx)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
