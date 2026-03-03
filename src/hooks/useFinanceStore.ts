@@ -32,6 +32,7 @@ function getInitialState(): FinanceState {
     accounts: DEFAULT_ACCOUNTS,
     budgets: [],
     thresholds: { large: 500, xlarge: 2000 },
+    monthlyBudget: 0,
   };
 }
 

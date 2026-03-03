@@ -8,7 +8,8 @@ import CategoryBar from '@/components/finance/CategoryBar';
 import TransactionForm from '@/components/finance/TransactionForm';
 import TransactionList from '@/components/finance/TransactionList';
 import ExpenseChart from '@/components/finance/ExpenseChart';
-import { Transaction } from '@/types/finance';
+import SortableList from '@/components/finance/SortableList';
+import { Transaction, Category, Account } from '@/types/finance';
 
 type Tab = 'analysis' | 'records' | 'charts' | 'settings';
 
