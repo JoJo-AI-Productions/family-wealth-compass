@@ -31,6 +31,7 @@ function loadState(): FinanceState {
     accounts: DEFAULT_ACCOUNTS,
     budgets: [],
     thresholds: { large: 500, xlarge: 2000 },
+    monthlyBudget: 0,
   };
 }
 
@@ -48,9 +49,12 @@ interface FinanceContextValue extends FinanceState {
   deleteTransaction: (id: string) => void;
   addCategory: (cat: Omit<Category, 'id'>) => void;
   deleteCategory: (id: string) => void;
+  reorderCategories: (categories: Category[]) => void;
   addAccount: (acc: Omit<Account, 'id'>) => void;
   deleteAccount: (id: string) => void;
+  reorderAccounts: (accounts: Account[]) => void;
   setThresholds: (thresholds: ExpenseThresholds) => void;
+  setMonthlyBudget: (budget: number) => void;
   getExpenseTag: (amount: number) => 'normal' | 'large' | 'xlarge';
 }
 
@@ -134,8 +138,20 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const reorderCategories = useCallback((categories: Category[]) => {
+    setState(prev => ({ ...prev, categories }));
+  }, []);
+
+  const reorderAccounts = useCallback((accounts: Account[]) => {
+    setState(prev => ({ ...prev, accounts }));
+  }, []);
+
   const setThresholds = useCallback((thresholds: ExpenseThresholds) => {
     setState(prev => ({ ...prev, thresholds }));
+  }, []);
+
+  const setMonthlyBudget = useCallback((monthlyBudget: number) => {
+    setState(prev => ({ ...prev, monthlyBudget }));
   }, []);
 
   const getExpenseTag = useCallback((amount: number) => {
@@ -152,9 +168,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       deleteTransaction,
       addCategory,
       deleteCategory,
+      reorderCategories,
       addAccount,
       deleteAccount,
+      reorderAccounts,
       setThresholds,
+      setMonthlyBudget,
       getExpenseTag,
     }}>
       {children}

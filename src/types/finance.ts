@@ -43,6 +43,7 @@ export interface FinanceState {
   accounts: Account[];
   budgets: Budget[];
   thresholds: ExpenseThresholds;
+  monthlyBudget: number; // 0 means not set
 }
 
 export const DEFAULT_EXPENSE_CATEGORIES: Category[] = [

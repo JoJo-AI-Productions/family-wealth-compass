@@ -151,65 +151,74 @@ export default function YearDetail() {
           })}
         </div>
 
-        {/* Selected date summary card */}
+        {/* Monthly summary card (combined) */}
         <div className="rounded-2xl bg-card p-5 shadow-card mb-6">
           <h3 className="text-center text-sm font-semibold text-muted-foreground mb-3">
-            {format(selectedDate, 'M月d日')} 收支情况
+            {format(selectedDate, 'M月')} 总收支
           </h3>
           <div className="flex items-center justify-center gap-6">
             <div className="text-center">
-              <span className="text-xs text-muted-foreground">支出</span>
+              <span className="text-xs text-muted-foreground">总支出</span>
               <div>
                 <span className="text-2xl font-bold text-success">
-                  {selectedStats.expense.toLocaleString()}
+                  {(monthlyData[format(selectedDate, 'yyyy-MM')]?.expense || 0).toLocaleString()}
                 </span>
                 <span className="text-sm text-muted-foreground ml-0.5">元</span>
               </div>
             </div>
             <div className="w-px h-8 bg-border" />
             <div className="text-center">
-              <span className="text-xs text-muted-foreground">收入</span>
+              <span className="text-xs text-muted-foreground">总收入</span>
               <div>
                 <span className="text-2xl font-bold text-primary">
-                  {selectedStats.income.toLocaleString()}
+                  {(monthlyData[format(selectedDate, 'yyyy-MM')]?.income || 0).toLocaleString()}
                 </span>
                 <span className="text-sm text-muted-foreground ml-0.5">元</span>
               </div>
             </div>
           </div>
+          {/* Monthly balance */}
           <div className="flex justify-center mt-3">
-            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/15 text-primary`}>
-              结余: {selectedStats.balance >= 0 ? '+' : ''}{selectedStats.balance.toLocaleString()}元
-            </span>
+            {(() => {
+              const mKey = format(selectedDate, 'yyyy-MM');
+              const mBalance = (monthlyData[mKey]?.income || 0) - (monthlyData[mKey]?.expense || 0);
+              return (
+                <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-primary/15 text-primary">
+                  本月结余: {mBalance >= 0 ? '+' : ''}{mBalance.toLocaleString()}元
+                </span>
+              );
+            })()}
           </div>
-
-          {/* Monthly totals */}
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <h4 className="text-center text-sm font-semibold text-muted-foreground mb-3">
-              {format(selectedDate, 'M月')} 总收支
-            </h4>
-            <div className="flex items-center justify-center gap-6">
-              <div className="text-center">
-                <span className="text-xs text-muted-foreground">总支出</span>
-                <div>
-                  <span className="text-2xl font-bold text-success">
-                    {(monthlyData[format(selectedDate, 'yyyy-MM')]?.expense || 0).toLocaleString()}
-                  </span>
-                  <span className="text-sm text-muted-foreground ml-0.5">元</span>
-                </div>
+          {/* Monthly budget if set */}
+          {store.monthlyBudget > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">本月预算</span>
+                <span className="text-sm font-bold text-foreground">¥{store.monthlyBudget.toLocaleString()}</span>
               </div>
-              <div className="w-px h-8 bg-border" />
-              <div className="text-center">
-                <span className="text-xs text-muted-foreground">总收入</span>
-                <div>
-                  <span className="text-2xl font-bold text-primary">
-                    {(monthlyData[format(selectedDate, 'yyyy-MM')]?.income || 0).toLocaleString()}
-                  </span>
-                  <span className="text-sm text-muted-foreground ml-0.5">元</span>
-                </div>
-              </div>
+              {(() => {
+                const mExpense = monthlyData[format(selectedDate, 'yyyy-MM')]?.expense || 0;
+                const remaining = store.monthlyBudget - mExpense;
+                const percentage = Math.min((mExpense / store.monthlyBudget) * 100, 100);
+                return (
+                  <>
+                    <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${percentage >= 100 ? 'bg-destructive' : percentage >= 80 ? 'bg-warning' : 'gradient-bar'}`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-[10px] text-muted-foreground">已用 {percentage.toFixed(0)}%</span>
+                      <span className={`text-[10px] font-medium ${remaining < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        {remaining >= 0 ? `剩余 ¥${remaining.toLocaleString()}` : `超支 ¥${Math.abs(remaining).toLocaleString()}`}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
-          </div>
+          )}
         </div>
 
         {/* Month calendar detail */}
