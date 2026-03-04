@@ -35,6 +35,10 @@ const Index = () => {
   const [showBudgetDialog, setShowBudgetDialog] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
 
+  // Threshold dialog state
+  const [showThresholdDialog, setShowThresholdDialog] = useState<'large' | 'xlarge' | null>(null);
+  const [thresholdInput, setThresholdInput] = useState('');
+
   const stats = useFinanceStats(store.transactions, period);
 
   const handleEdit = (tx: Transaction) => {
@@ -62,6 +66,17 @@ const Index = () => {
   const confirmBudget = () => {
     store.setMonthlyBudget(Number(budgetInput) || 0);
     setShowBudgetDialog(false);
+  };
+
+  const openThresholdDialog = (type: 'large' | 'xlarge') => {
+    setThresholdInput(String(store.thresholds[type]));
+    setShowThresholdDialog(type);
+  };
+
+  const confirmThreshold = () => {
+    if (!showThresholdDialog) return;
+    store.setThresholds({ ...store.thresholds, [showThresholdDialog]: Number(thresholdInput) || 0 });
+    setShowThresholdDialog(null);
   };
 
   const maxPercentage = stats.categoryBreakdown.length > 0 ? stats.categoryBreakdown[0].percentage : 100;
@@ -172,16 +187,16 @@ const Index = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">大额支出阈值</span>
-                  <div className="flex items-center gap-1">
+                  <div onClick={() => openThresholdDialog('large')} className="flex items-center gap-1 cursor-pointer bg-muted rounded-lg px-3 py-1.5 hover:bg-accent transition-colors">
                     <span className="text-sm text-muted-foreground">¥</span>
-                    <input type="number" value={store.thresholds.large} onChange={e => store.setThresholds({ ...store.thresholds, large: Number(e.target.value) })} className="w-20 text-right bg-muted rounded-lg px-2 py-1 text-sm font-medium" />
+                    <span className="text-sm font-medium min-w-[3rem] text-right">{store.thresholds.large}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">超大额支出阈值</span>
-                  <div className="flex items-center gap-1">
+                  <div onClick={() => openThresholdDialog('xlarge')} className="flex items-center gap-1 cursor-pointer bg-muted rounded-lg px-3 py-1.5 hover:bg-accent transition-colors">
                     <span className="text-sm text-muted-foreground">¥</span>
-                    <input type="number" value={store.thresholds.xlarge} onChange={e => store.setThresholds({ ...store.thresholds, xlarge: Number(e.target.value) })} className="w-20 text-right bg-muted rounded-lg px-2 py-1 text-sm font-medium" />
+                    <span className="text-sm font-medium min-w-[3rem] text-right">{store.thresholds.xlarge}</span>
                   </div>
                 </div>
               </div>
@@ -312,6 +327,30 @@ const Index = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowBudgetDialog(false)}>取消</Button>
             <Button onClick={confirmBudget}>确认</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Threshold edit dialog */}
+      <Dialog open={!!showThresholdDialog} onOpenChange={(open) => { if (!open) setShowThresholdDialog(null); }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>{showThresholdDialog === 'large' ? '设置大额支出阈值' : '设置超大额支出阈值'}</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-2 py-4">
+            <span className="text-lg text-muted-foreground">¥</span>
+            <input
+              type="number"
+              autoFocus
+              value={thresholdInput}
+              onChange={e => setThresholdInput(e.target.value)}
+              placeholder="输入金额"
+              className="flex-1 bg-muted rounded-lg px-3 py-2 text-base font-medium outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowThresholdDialog(null)}>取消</Button>
+            <Button onClick={confirmThreshold}>确认</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
