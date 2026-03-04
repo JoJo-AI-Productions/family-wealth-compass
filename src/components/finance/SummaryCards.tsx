@@ -19,15 +19,15 @@ export default function SummaryCards({ totalExpense, totalIncome, balance, perio
   return (
     <div className="grid grid-cols-3 gap-3">
       {cards.map(card => (
-        <div
+         <div
           key={card.label}
           onClick={() => card.clickable && navigate(`/year-detail?type=${card.type}`)}
-          className={`flex flex-col items-center rounded-2xl bg-card p-4 shadow-card animate-slide-up ${
+          className={`flex flex-col items-center rounded-2xl bg-card p-3 shadow-card animate-slide-up overflow-hidden ${
             card.clickable ? 'cursor-pointer active:scale-95 transition-transform' : ''
           }`}
         >
           <span className="text-xs text-muted-foreground">{card.label}</span>
-          <span className={`mt-1 text-2xl font-bold ${card.className}`}>
+         <span className={`mt-1 text-lg font-bold ${card.className} break-all leading-tight`}>
             {card.type === 'expense' ? `-${Math.abs(card.value).toLocaleString()}` : card.type === 'income' ? `+${Math.abs(card.value).toLocaleString()}` : (card.value >= 0 ? '+' : '-') + Math.abs(card.value).toLocaleString()}
           </span>
         </div>

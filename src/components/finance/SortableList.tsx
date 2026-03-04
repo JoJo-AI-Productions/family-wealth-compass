@@ -100,7 +100,7 @@ export default function SortableList<T extends { id: string }>({
           key={item.id}
           ref={el => { itemRefs.current[index] = el; }}
           data-sort-index={index}
-          draggable={isDragging && dragIndex === index}
+          draggable={true}
           onDragStart={() => handleDragStart(index)}
           onDragOver={(e) => handleDragOver(e, index)}
           onDrop={() => handleDrop(index)}

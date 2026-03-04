@@ -18,7 +18,7 @@ export default function CategoryBar({ category, amount, percentage, maxPercentag
         />
       </div>
       <span className="text-sm font-semibold text-foreground w-14 text-right">{amount.toLocaleString()}</span>
-      <span className="text-sm text-muted-foreground w-10 text-right">{percentage}%</span>
+      <span className="text-sm text-muted-foreground w-12 text-right">{percentage}%</span>
     </div>
   );
 }
