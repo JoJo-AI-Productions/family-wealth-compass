@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
+import { GripVertical } from 'lucide-react';
 
 interface SortableListProps<T extends { id: string }> {
   items: T[];
@@ -15,7 +16,6 @@ export default function SortableList<T extends { id: string }>({
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const touchStartY = useRef(0);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const handleDragStart = (index: number) => {
     setDragIndex(index);
@@ -29,41 +29,29 @@ export default function SortableList<T extends { id: string }>({
 
   const handleDrop = (index: number) => {
     if (dragIndex === null || dragIndex === index) {
-      setDragIndex(null);
-      setOverIndex(null);
-      setIsDragging(false);
+      setDragIndex(null); setOverIndex(null); setIsDragging(false);
       return;
     }
     const newItems = [...items];
     const [moved] = newItems.splice(dragIndex, 1);
     newItems.splice(index, 0, moved);
     onReorder(newItems);
-    setDragIndex(null);
-    setOverIndex(null);
-    setIsDragging(false);
+    setDragIndex(null); setOverIndex(null); setIsDragging(false);
   };
 
   const handleDragEnd = () => {
-    setDragIndex(null);
-    setOverIndex(null);
-    setIsDragging(false);
+    setDragIndex(null); setOverIndex(null); setIsDragging(false);
   };
 
-  // Touch-based reorder
   const handleTouchStart = (index: number, e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
-    longPressTimer.current = setTimeout(() => {
-      handleDragStart(index);
-    }, 400);
+    longPressTimer.current = setTimeout(() => { handleDragStart(index); }, 400);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (longPressTimer.current) {
       const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
-      if (dy > 10 && !isDragging) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
+      if (dy > 10 && !isDragging) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
     }
     if (!isDragging || dragIndex === null) return;
     const touch = e.touches[0];
@@ -78,19 +66,14 @@ export default function SortableList<T extends { id: string }>({
   };
 
   const handleTouchEnd = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
     if (isDragging && dragIndex !== null && overIndex !== null && dragIndex !== overIndex) {
       const newItems = [...items];
       const [moved] = newItems.splice(dragIndex, 1);
       newItems.splice(overIndex, 0, moved);
       onReorder(newItems);
     }
-    setDragIndex(null);
-    setOverIndex(null);
-    setIsDragging(false);
+    setDragIndex(null); setOverIndex(null); setIsDragging(false);
   };
 
   return (
@@ -98,7 +81,6 @@ export default function SortableList<T extends { id: string }>({
       {items.map((item, index) => (
         <div
           key={item.id}
-          ref={el => { itemRefs.current[index] = el; }}
           data-sort-index={index}
           draggable={true}
           onDragStart={() => handleDragStart(index)}
@@ -110,11 +92,15 @@ export default function SortableList<T extends { id: string }>({
             dragIndex === index ? 'opacity-50 bg-accent/20' : ''
           } ${overIndex === index && dragIndex !== index ? 'border-t-2 border-primary' : ''}`}
         >
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-muted-foreground cursor-grab active:cursor-grabbing text-xs">⠿</span>
+          <div className="flex-1 min-w-0">
             {renderItem(item, index)}
           </div>
-          {renderActions?.(item)}
+          <div className="flex items-center gap-1 shrink-0">
+            {renderActions?.(item)}
+            <div className="p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none">
+              <GripVertical className="w-5 h-5" />
+            </div>
+          </div>
         </div>
       ))}
     </div>
