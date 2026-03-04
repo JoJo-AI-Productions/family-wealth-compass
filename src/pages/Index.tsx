@@ -127,6 +127,32 @@ const Index = () => {
 
         {activeTab === 'settings' && (
           <div className="space-y-4 animate-fade-in">
+            {/* Monthly budget */}
+            <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
+              <h3 className="text-sm font-semibold mb-3 text-foreground">每月预算</h3>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">月预算金额</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-muted-foreground">¥</span>
+                  <input
+                    type="number"
+                    value={store.monthlyBudget || ''}
+                    placeholder="未设置"
+                    onChange={e => store.setMonthlyBudget(Number(e.target.value) || 0)}
+                    className="w-24 text-right bg-muted rounded-lg px-2 py-1 text-sm font-medium"
+                  />
+                </div>
+              </div>
+              {store.monthlyBudget > 0 && (
+                <button
+                  onClick={() => store.setMonthlyBudget(0)}
+                  className="mt-2 text-xs text-destructive hover:underline"
+                >
+                  清除预算
+                </button>
+              )}
+            </div>
+
             <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
               <h3 className="text-sm font-semibold mb-3 text-foreground">大额支出标准</h3>
               <div className="space-y-3">
@@ -159,24 +185,30 @@ const Index = () => {
 
             <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
               <h3 className="text-sm font-semibold mb-3 text-foreground">支出分类管理</h3>
-              <div className="space-y-2">
-                {store.categories.filter(c => c.type === 'expense').map(c => (
-                  <div key={c.id} className="flex items-center justify-between py-1">
-                    <span className="text-sm">{c.icon} {c.name}</span>
-                    <button
-                      onClick={() => store.deleteCategory(c.id)}
-                      className="text-xs text-destructive hover:underline"
-                    >
-                      删除
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <SortableList
+                items={store.categories.filter(c => c.type === 'expense')}
+                onReorder={(reordered) => {
+                  const incomeCategories = store.categories.filter(c => c.type === 'income');
+                  store.reorderCategories([...reordered, ...incomeCategories]);
+                }}
+                renderItem={(c) => <span className="text-sm">{c.icon} {c.name}</span>}
+                renderActions={(c) => (
+                  <button
+                    onClick={() => store.deleteCategory(c.id)}
+                    className="text-xs text-destructive hover:underline shrink-0"
+                  >
+                    删除
+                  </button>
+                )}
+              />
               <button
                 onClick={() => {
                   const name = prompt('输入新分类名称：');
                   if (name) {
-                    store.addCategory({ name, type: 'expense', icon: '📌' });
+                    const ICONS = ['🍜','🚗','🛍️','🎮','🧴','💡','🐾','📚','🏥','🏠','🎵','✈️','👶','🎂','💻','🏋️','☕','🎬','📱','🧹'];
+                    const randomIcon = ICONS[Math.floor(Math.random() * ICONS.length)];
+                    const icon = prompt(`选择图标（默认${randomIcon}）：`) || randomIcon;
+                    store.addCategory({ name, type: 'expense', icon });
                   }
                 }}
                 className="mt-3 text-sm text-primary font-medium hover:underline"
@@ -188,19 +220,19 @@ const Index = () => {
             {/* Account management */}
             <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
               <h3 className="text-sm font-semibold mb-3 text-foreground">账户分类管理</h3>
-              <div className="space-y-2">
-                {store.accounts.map(a => (
-                  <div key={a.id} className="flex items-center justify-between py-1">
-                    <span className="text-sm">{a.icon} {a.name}</span>
-                    <button
-                      onClick={() => store.deleteAccount(a.id)}
-                      className="text-xs text-destructive hover:underline"
-                    >
-                      删除
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <SortableList
+                items={store.accounts}
+                onReorder={(reordered) => store.reorderAccounts(reordered)}
+                renderItem={(a) => <span className="text-sm">{a.icon} {a.name}</span>}
+                renderActions={(a) => (
+                  <button
+                    onClick={() => store.deleteAccount(a.id)}
+                    className="text-xs text-destructive hover:underline shrink-0"
+                  >
+                    删除
+                  </button>
+                )}
+              />
               <button
                 onClick={() => {
                   const name = prompt('输入新账户名称（如：信用卡）：');

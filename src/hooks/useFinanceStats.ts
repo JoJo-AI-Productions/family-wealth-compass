@@ -51,7 +51,7 @@ export function useFinanceStats(transactions: Transaction[], period: TimePeriod)
       .map(([category, amount]) => ({
         category,
         amount,
-        percentage: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0,
+        percentage: totalExpense > 0 ? Math.round((amount / totalExpense) * 1000) / 10 : 0,
       }))
       .sort((a, b) => b.amount - a.amount);
 
