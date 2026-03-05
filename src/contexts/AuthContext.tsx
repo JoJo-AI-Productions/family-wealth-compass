@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useCallback, ReactNode } from 'rea
 
 const AUTH_KEY = 'family-finance-auth';
 const USERS_KEY = 'family-finance-users';
+const LEGACY_DATA_KEY = 'family-finance-data';
+const MIGRATION_DONE_KEY = 'family-finance-legacy-migrated';
 
 export interface UserAccount {
   accountId: string;
