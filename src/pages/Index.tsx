@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { BarChart3, Plus, List, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { BarChart3, Plus, List, Settings, LogIn, LogOut } from 'lucide-react';
 import { useFinanceStore } from '@/contexts/FinanceContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFinanceStats, TimePeriod } from '@/hooks/useFinanceStats';
 import PeriodTabs from '@/components/finance/PeriodTabs';
 import SummaryCards from '@/components/finance/SummaryCards';
@@ -23,6 +25,8 @@ type Tab = 'analysis' | 'records' | 'charts' | 'settings';
 
 const Index = () => {
   const store = useFinanceStore();
+  const { currentUser, isLoggedIn, logout, ensureGuest } = useAuth();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<TimePeriod>('month');
   const [showForm, setShowForm] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
