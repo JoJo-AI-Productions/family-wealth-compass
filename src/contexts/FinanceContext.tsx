@@ -9,22 +9,17 @@ import {
   DEFAULT_INCOME_CATEGORIES,
   DEFAULT_ACCOUNTS,
 } from '@/types/finance';
+import { useAuth } from '@/contexts/AuthContext';
 
-const STORAGE_KEY = 'family-finance-data';
+function getStorageKey(accountId: string): string {
+  return `family-finance-data-${accountId}`;
+}
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
 
-function loadState(): FinanceState {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (e) {
-    console.warn('Failed to load from storage:', e);
-  }
+function getDefaultState(): FinanceState {
   return {
     transactions: [],
     categories: [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES],
@@ -35,9 +30,21 @@ function loadState(): FinanceState {
   };
 }
 
-function saveState(state: FinanceState) {
+function loadState(accountId: string): FinanceState {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const stored = localStorage.getItem(getStorageKey(accountId));
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.warn('Failed to load from storage:', e);
+  }
+  return getDefaultState();
+}
+
+function saveState(accountId: string, state: FinanceState) {
+  try {
+    localStorage.setItem(getStorageKey(accountId), JSON.stringify(state));
   } catch (e) {
     console.warn('Failed to save to storage:', e);
   }
@@ -61,17 +68,26 @@ interface FinanceContextValue extends FinanceState {
 const FinanceContext = createContext<FinanceContextValue | null>(null);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<FinanceState>(loadState);
+  const { currentUser } = useAuth();
+  const accountId = currentUser?.accountId || '__guest__';
+
+  const [state, setState] = useState<FinanceState>(() => loadState(accountId));
+
+  // Reload data when user changes
+  useEffect(() => {
+    setState(loadState(accountId));
+  }, [accountId]);
 
   // Persist every state change to localStorage
   useEffect(() => {
-    saveState(state);
-  }, [state]);
+    saveState(accountId, state);
+  }, [state, accountId]);
 
   // Listen for storage changes from other tabs/windows
   useEffect(() => {
+    const key = getStorageKey(accountId);
     const handler = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
+      if (e.key === key && e.newValue) {
         try {
           setState(JSON.parse(e.newValue));
         } catch {}
@@ -79,7 +95,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
-  }, []);
+  }, [accountId]);
 
   const addTransaction = useCallback((tx: Omit<Transaction, 'id' | 'createdAt'>) => {
     setState(prev => {
