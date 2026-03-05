@@ -59,7 +59,12 @@ function saveAuth(state: AuthState) {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(loadAuth);
+  const [state, setState] = useState<AuthState>(() => {
+    const initial = loadAuth();
+    // Migrate legacy data for old users on first load
+    migrateLegacyData(initial);
+    return initial;
+  });
 
   const persist = useCallback((newState: AuthState) => {
     setState(newState);
