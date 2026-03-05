@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { BarChart3, Plus, List, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { BarChart3, Plus, List, Settings, LogIn, LogOut } from 'lucide-react';
 import { useFinanceStore } from '@/contexts/FinanceContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFinanceStats, TimePeriod } from '@/hooks/useFinanceStats';
 import PeriodTabs from '@/components/finance/PeriodTabs';
 import SummaryCards from '@/components/finance/SummaryCards';
@@ -23,6 +25,8 @@ type Tab = 'analysis' | 'records' | 'charts' | 'settings';
 
 const Index = () => {
   const store = useFinanceStore();
+  const { currentUser, isLoggedIn, logout, ensureGuest } = useAuth();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<TimePeriod>('month');
   const [showForm, setShowForm] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
@@ -39,7 +43,15 @@ const Index = () => {
   const [showThresholdDialog, setShowThresholdDialog] = useState<'large' | 'xlarge' | null>(null);
   const [thresholdInput, setThresholdInput] = useState('');
 
+  // Logout confirmation state
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
   const stats = useFinanceStats(store.transactions, period);
+
+  // Ensure guest account on first load
+  useEffect(() => {
+    ensureGuest();
+  }, [ensureGuest]);
 
   const handleEdit = (tx: Transaction) => {
     setEditingTx(tx);
@@ -92,17 +104,36 @@ const Index = () => {
     <div className="min-h-screen gradient-hero">
       <div className="max-w-lg mx-auto px-4 pb-24">
         {/* Header */}
-        <header className="flex items-center justify-between pt-6 pb-4">
-          <button
-            onClick={() => setActiveTab('analysis')}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-              activeTab === 'analysis'
-                ? 'gradient-warm text-primary-foreground shadow-float'
-                : 'bg-card/60 text-foreground backdrop-blur-sm'
-            }`}
-          >
-            看分析
-          </button>
+        <header className="flex items-center justify-between pt-6 pb-4 gap-2">
+          <div className="flex items-center gap-2">
+            {!isLoggedIn ? (
+              <button
+                onClick={() => navigate('/login')}
+                className="px-3 py-2 rounded-full text-sm font-semibold bg-card/60 text-foreground backdrop-blur-sm hover:bg-card transition-all flex items-center gap-1"
+              >
+                <LogIn className="w-4 h-4" />
+                登录
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowLogoutDialog(true)}
+                className="px-3 py-2 rounded-full text-sm font-semibold bg-card/60 text-foreground backdrop-blur-sm hover:bg-card transition-all flex items-center gap-1"
+              >
+                <LogOut className="w-4 h-4" />
+                退出
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('analysis')}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                activeTab === 'analysis'
+                  ? 'gradient-warm text-primary-foreground shadow-float'
+                  : 'bg-card/60 text-foreground backdrop-blur-sm'
+              }`}
+            >
+              看分析
+            </button>
+          </div>
           <button
             onClick={() => setShowForm(true)}
             className="px-5 py-2 rounded-full text-sm font-semibold bg-card/80 text-foreground backdrop-blur-sm shadow-card hover:bg-card transition-all"
@@ -354,6 +385,24 @@ const Index = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Logout confirmation dialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认退出</AlertDialogTitle>
+            <AlertDialogDescription>
+              退出登录后将切换为游客模式，当前账号数据已保存。确定要退出吗？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { logout(); setShowLogoutDialog(false); }}>
+              确认退出
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
