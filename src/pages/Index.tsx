@@ -43,7 +43,15 @@ const Index = () => {
   const [showThresholdDialog, setShowThresholdDialog] = useState<'large' | 'xlarge' | null>(null);
   const [thresholdInput, setThresholdInput] = useState('');
 
+  // Logout confirmation state
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
   const stats = useFinanceStats(store.transactions, period);
+
+  // Ensure guest account on first load
+  useEffect(() => {
+    ensureGuest();
+  }, [ensureGuest]);
 
   const handleEdit = (tx: Transaction) => {
     setEditingTx(tx);
