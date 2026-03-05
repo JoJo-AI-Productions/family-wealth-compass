@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useCallback, ReactNode } from 'rea
 
 const AUTH_KEY = 'family-finance-auth';
 const USERS_KEY = 'family-finance-users';
+const LEGACY_DATA_KEY = 'family-finance-data';
+const MIGRATION_DONE_KEY = 'family-finance-legacy-migrated';
 
 export interface UserAccount {
   accountId: string;
@@ -54,10 +56,64 @@ function saveAuth(state: AuthState) {
   localStorage.setItem(AUTH_KEY, JSON.stringify(state));
 }
 
+function migrateLegacyData(authState: AuthState) {
+  if (localStorage.getItem(MIGRATION_DONE_KEY)) return;
+  const legacyRaw = localStorage.getItem(LEGACY_DATA_KEY);
+  if (!legacyRaw) {
+    localStorage.setItem(MIGRATION_DONE_KEY, '1');
+    return;
+  }
+  try {
+    const legacyData = JSON.parse(legacyRaw);
+    if (!legacyData.transactions || legacyData.transactions.length === 0) {
+      localStorage.setItem(MIGRATION_DONE_KEY, '1');
+      return;
+    }
+    // Find or create a guest account to hold legacy data
+    const users = loadUsers();
+    let guest = Object.values(users).find(u => u.isGuest);
+    if (!guest) {
+      const guestId = generateDigits(6);
+      const guestPwd = generateDigits(6);
+      guest = { accountId: guestId, password: guestPwd, isGuest: true };
+      users[guestId] = guest;
+      saveUsers(users);
+    }
+    // Copy legacy data to guest's namespaced key
+    const guestKey = `family-finance-data-${guest.accountId}`;
+    const existingRaw = localStorage.getItem(guestKey);
+    if (!existingRaw) {
+      localStorage.setItem(guestKey, legacyRaw);
+    } else {
+      // Merge: add legacy transactions that don't exist yet
+      const existing = JSON.parse(existingRaw);
+      const ids = new Set(existing.transactions.map((t: any) => t.id));
+      const newTxs = legacyData.transactions.filter((t: any) => !ids.has(t.id));
+      existing.transactions = [...newTxs, ...existing.transactions];
+      localStorage.setItem(guestKey, JSON.stringify(existing));
+    }
+    // If no current user, set to this guest
+    if (!authState.currentUser) {
+      authState.currentUser = guest;
+      authState.isLoggedIn = false;
+      saveAuth(authState);
+    }
+    localStorage.setItem(MIGRATION_DONE_KEY, '1');
+  } catch (e) {
+    console.warn('Legacy data migration failed:', e);
+    localStorage.setItem(MIGRATION_DONE_KEY, '1');
+  }
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(loadAuth);
+  const [state, setState] = useState<AuthState>(() => {
+    const initial = loadAuth();
+    // Migrate legacy data for old users on first load
+    migrateLegacyData(initial);
+    return initial;
+  });
 
   const persist = useCallback((newState: AuthState) => {
     setState(newState);
