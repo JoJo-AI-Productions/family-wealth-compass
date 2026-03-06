@@ -124,3 +124,18 @@
     box-shadow: var(--shadow-float);
   }
 }
+
+@keyframes slide-out-left {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-60px); }
+}
+@keyframes slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(60px); }
+}
+.animate-slide-out-left {
+  animation: slide-out-left 0.2s ease-out forwards;
+}
+.animate-slide-out-right {
+  animation: slide-out-right 0.2s ease-out forwards;
+}

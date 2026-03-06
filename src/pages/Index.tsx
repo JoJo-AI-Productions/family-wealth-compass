@@ -244,12 +244,26 @@ const Index = () => {
                 }}
                 renderItem={(c) => <span className="text-sm">{c.icon} {c.name}</span>}
                 renderActions={(c) => (
-                  <button
-                    onClick={() => setDeleteTarget({ type: 'category', id: c.id, name: c.name })}
-                    className="text-xs text-destructive hover:underline shrink-0 px-2 py-1"
-                  >
-                    删除
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        const name = prompt('编辑分类名称：', c.name);
+                        if (name !== null) {
+                          const icon = prompt(`编辑图标（当前${c.icon}）：`, c.icon) || c.icon;
+                          store.updateCategory(c.id, { name: name || c.name, icon });
+                        }
+                      }}
+                      className="text-xs text-primary hover:underline px-2 py-1"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget({ type: 'category', id: c.id, name: c.name })}
+                      className="text-xs text-destructive hover:underline px-2 py-1"
+                    >
+                      删除
+                    </button>
+                  </div>
                 )}
               />
               <button
@@ -268,6 +282,55 @@ const Index = () => {
               </button>
             </div>
 
+            {/* Income categories */}
+            <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
+              <h3 className="text-sm font-semibold mb-3 text-foreground">收入分类管理</h3>
+              <SortableList
+                items={store.categories.filter(c => c.type === 'income')}
+                onReorder={(reordered) => {
+                  const expenseCategories = store.categories.filter(c => c.type === 'expense');
+                  store.reorderCategories([...expenseCategories, ...reordered]);
+                }}
+                renderItem={(c) => <span className="text-sm">{c.icon} {c.name}</span>}
+                renderActions={(c) => (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        const name = prompt('编辑分类名称：', c.name);
+                        if (name !== null) {
+                          const icon = prompt(`编辑图标（当前${c.icon}）：`, c.icon) || c.icon;
+                          store.updateCategory(c.id, { name: name || c.name, icon });
+                        }
+                      }}
+                      className="text-xs text-primary hover:underline px-2 py-1"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget({ type: 'category', id: c.id, name: c.name })}
+                      className="text-xs text-destructive hover:underline px-2 py-1"
+                    >
+                      删除
+                    </button>
+                  </div>
+                )}
+              />
+              <button
+                onClick={() => {
+                  const name = prompt('输入新收入分类名称：');
+                  if (name) {
+                    const ICONS = ['💰','🏦','📈','🎁','💵','💎','🪙','📊'];
+                    const randomIcon = ICONS[Math.floor(Math.random() * ICONS.length)];
+                    const icon = prompt(`选择图标（默认${randomIcon}）：`) || randomIcon;
+                    store.addCategory({ name, type: 'income', icon });
+                  }
+                }}
+                className="mt-3 text-sm text-primary font-medium hover:underline"
+              >
+                + 添加收入分类
+              </button>
+            </div>
+
             {/* Account management */}
             <div className="rounded-2xl bg-card/90 backdrop-blur-sm p-4 shadow-card">
               <h3 className="text-sm font-semibold mb-3 text-foreground">账户分类管理</h3>
@@ -276,12 +339,26 @@ const Index = () => {
                 onReorder={(reordered) => store.reorderAccounts(reordered)}
                 renderItem={(a) => <span className="text-sm">{a.icon} {a.name}</span>}
                 renderActions={(a) => (
-                  <button
-                    onClick={() => setDeleteTarget({ type: 'account', id: a.id, name: a.name })}
-                    className="text-xs text-destructive hover:underline shrink-0 px-2 py-1"
-                  >
-                    删除
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        const name = prompt('编辑账户名称：', a.name);
+                        if (name !== null) {
+                          const icon = prompt(`编辑图标（当前${a.icon}）：`, a.icon) || a.icon;
+                          store.updateAccount(a.id, { name: name || a.name, icon });
+                        }
+                      }}
+                      className="text-xs text-primary hover:underline px-2 py-1"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget({ type: 'account', id: a.id, name: a.name })}
+                      className="text-xs text-destructive hover:underline px-2 py-1"
+                    >
+                      删除
+                    </button>
+                  </div>
                 )}
               />
               <button
