@@ -68,8 +68,8 @@ export const DEFAULT_INCOME_CATEGORIES: Category[] = [
 ];
 
 export const DEFAULT_ACCOUNTS: Account[] = [
-  { id: 'wechat', name: '微信', icon: '💬' },
-  { id: 'alipay', name: '支付宝', icon: '📱' },
-  { id: 'bank', name: '银行卡', icon: '💳' },
+  { id: 'wechat', name: '微信', icon: '💚' },
+  { id: 'alipay', name: '支付宝', icon: '🔵' },
+  { id: 'bank', name: '银行卡', icon: '🏦' },
   { id: 'credit', name: '信用卡', icon: '💳' },
 ];
