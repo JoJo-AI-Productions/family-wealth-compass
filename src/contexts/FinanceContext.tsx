@@ -55,9 +55,11 @@ interface FinanceContextValue extends FinanceState {
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   addCategory: (cat: Omit<Category, 'id'>) => void;
+  updateCategory: (id: string, updates: Partial<Omit<Category, 'id'>>) => void;
   deleteCategory: (id: string) => void;
   reorderCategories: (categories: Category[]) => void;
   addAccount: (acc: Omit<Account, 'id'>) => void;
+  updateAccount: (id: string, updates: Partial<Omit<Account, 'id'>>) => void;
   deleteAccount: (id: string) => void;
   reorderAccounts: (accounts: Account[]) => void;
   setThresholds: (thresholds: ExpenseThresholds) => void;
@@ -133,6 +135,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateCategory = useCallback((id: string, updates: Partial<Omit<Category, 'id'>>) => {
+    setState(prev => ({
+      ...prev,
+      categories: prev.categories.map(c => c.id === id ? { ...c, ...updates } : c),
+    }));
+  }, []);
+
   const deleteCategory = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
@@ -144,6 +153,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setState(prev => ({
       ...prev,
       accounts: [...prev.accounts, { ...acc, id: generateId() }],
+    }));
+  }, []);
+
+  const updateAccount = useCallback((id: string, updates: Partial<Omit<Account, 'id'>>) => {
+    setState(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(a => a.id === id ? { ...a, ...updates } : a),
     }));
   }, []);
 
@@ -183,9 +199,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       updateTransaction,
       deleteTransaction,
       addCategory,
+      updateCategory,
       deleteCategory,
       reorderCategories,
       addAccount,
+      updateAccount,
       deleteAccount,
       reorderAccounts,
       setThresholds,
