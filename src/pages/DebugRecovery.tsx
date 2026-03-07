@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
@@ -129,37 +129,66 @@ const DebugRecovery = () => {
     [],
   );
 
-  const recoverOldWebsiteData = async () => {
-    appendLog(`开始尝试恢复旧域名数据: ${OLD_NETLIFY_ORIGIN}`);
+  const requestOldWebsiteData = async (interactive: boolean): Promise<any | null> => {
+    // 1) Try iframe bridge first (works without user gesture)
+    const iframeResult = await new Promise<any | null>((resolve) => {
+      let settled = false;
+      let timeoutId: number | null = null;
 
-    if (window.location.origin === OLD_NETLIFY_ORIGIN) {
-      const direct = extractGuestFinanceDataFromLocalStorage(window.localStorage);
-      if (!direct) {
-        appendLog('旧域名下未检测到游客数据。');
-        return;
-      }
-      setInput(JSON.stringify({ bestGuess: { financeData: direct } }, null, 2));
-      appendLog('已从当前旧域名 localStorage 读取游客数据并填充。');
-      return;
-    }
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = `${OLD_NETLIFY_ORIGIN}/?recoveryBridge=1`;
+
+      const cleanup = () => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener('message', onMessage);
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        iframe.remove();
+      };
+
+      const onMessage = (event: MessageEvent) => {
+        if (event.origin !== OLD_NETLIFY_ORIGIN) return;
+        if (!event.data || event.data.type !== RECOVERY_RESPONSE_TYPE) return;
+        cleanup();
+        resolve(event.data.payload || null);
+      };
+
+      window.addEventListener('message', onMessage);
+      document.body.appendChild(iframe);
+
+      iframe.onload = () => {
+        iframe.contentWindow?.postMessage({ type: RECOVERY_REQUEST_TYPE }, OLD_NETLIFY_ORIGIN);
+      };
+
+      timeoutId = window.setTimeout(() => {
+        cleanup();
+        resolve(null);
+      }, 6000);
+    });
+
+    if (iframeResult) return iframeResult;
+
+    // 2) If user clicked manually, fallback to popup retry
+    if (!interactive) return null;
 
     const popup = window.open(`${OLD_NETLIFY_ORIGIN}/?recoveryBridge=1`, 'fwc-recovery', 'width=480,height=720');
     if (!popup) {
-      appendLog('无法打开旧域名窗口（可能被浏览器拦截弹窗）。');
-      return;
+      appendLog('自动恢复失败，且无法打开旧域名窗口（可能被浏览器拦截弹窗）。');
+      return null;
     }
 
-    appendLog('已打开旧域名窗口，等待数据回传。');
-
-    const result = await new Promise<any | null>((resolve) => {
+    const popupResult = await new Promise<any | null>((resolve) => {
       let settled = false;
       let ticker: number | null = null;
+      let timeoutId: number | null = null;
 
       const cleanup = () => {
         if (settled) return;
         settled = true;
         window.removeEventListener('message', onMessage);
         if (ticker !== null) window.clearInterval(ticker);
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
       };
 
       const onMessage = (event: MessageEvent) => {
@@ -175,13 +204,31 @@ const DebugRecovery = () => {
         popup.postMessage({ type: RECOVERY_REQUEST_TYPE }, OLD_NETLIFY_ORIGIN);
       }, 700);
 
-      window.setTimeout(() => {
+      timeoutId = window.setTimeout(() => {
         cleanup();
         resolve(null);
       }, 12000);
     });
 
-    popup.close();
+    if (!popup.closed) popup.close();
+    return popupResult;
+  };
+
+  const recoverOldWebsiteData = async (interactive: boolean) => {
+    appendLog(`开始尝试恢复旧域名数据: ${OLD_NETLIFY_ORIGIN}`);
+
+    if (window.location.origin === OLD_NETLIFY_ORIGIN) {
+      const direct = extractGuestFinanceDataFromLocalStorage(window.localStorage);
+      if (!direct) {
+        appendLog('旧域名下未检测到游客数据。');
+        return;
+      }
+      setInput(JSON.stringify({ bestGuess: { financeData: direct } }, null, 2));
+      appendLog('已从当前旧域名 localStorage 读取游客数据并填充。');
+      return;
+    }
+
+    const result = await requestOldWebsiteData(interactive);
 
     if (!result) {
       appendLog('未能自动获取旧域名 localStorage（可能旧站不可达或无桥接脚本）。');
@@ -192,6 +239,11 @@ const DebugRecovery = () => {
     setInput(JSON.stringify({ bestGuess: { financeData: result } }, null, 2));
     appendLog('已获取旧域名游客数据并填充输入框。');
   };
+
+  useEffect(() => {
+    recoverOldWebsiteData(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleApply = () => {
     appendLog('开始恢复流程。');
@@ -240,7 +292,7 @@ const DebugRecovery = () => {
           <div className="flex gap-2 flex-wrap">
             <Button onClick={handleApply}>写入游客默认数据</Button>
             <Button variant="secondary" onClick={() => setInput(sample)}>填充示例</Button>
-            <Button variant="secondary" onClick={recoverOldWebsiteData}>恢复旧网页数据</Button>
+            <Button variant="secondary" onClick={() => recoverOldWebsiteData(true)}>恢复旧网页数据</Button>
             <Button variant="outline" onClick={() => navigate('/')}>返回首页</Button>
           </div>
         </Card>

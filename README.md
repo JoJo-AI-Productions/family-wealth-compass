@@ -103,6 +103,8 @@ After exporting JSON, open the app in development mode and visit:
 
 - `/debug/recovery`
 
+The page will auto-attempt to fetch old guest data from `family-wealth-compass-001.netlify.app` and prefill the input box.
+
 Paste either:
 - the full export report (`bestGuess.financeData`), or
 - a direct finance state JSON object (`{ transactions, categories, ... }`).
