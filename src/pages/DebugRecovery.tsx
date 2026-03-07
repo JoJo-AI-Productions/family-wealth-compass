@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom';
 const USERS_KEY = 'family-finance-users';
 const AUTH_KEY = 'family-finance-auth';
 const MIGRATION_DONE_KEY = 'family-finance-legacy-migrated';
+const OLD_NETLIFY_ORIGIN = 'https://family-wealth-compass-001.netlify.app';
+const RECOVERY_REQUEST_TYPE = 'FWC_RECOVERY_REQUEST';
+const RECOVERY_RESPONSE_TYPE = 'FWC_RECOVERY_RESPONSE';
 
 type RecoveredPayload = {
   bestGuess?: {
@@ -41,6 +44,21 @@ function safeJsonParse<T>(text: string): T | null {
   } catch {
     return null;
   }
+}
+
+function extractGuestFinanceDataFromLocalStorage(storage: Storage): any | null {
+  const usersRaw = storage.getItem(USERS_KEY);
+  const users = usersRaw ? safeJsonParse<Record<string, UserAccount>>(usersRaw) : null;
+
+  if (!users) return null;
+
+  const guest = Object.values(users).find((u) => u.isGuest);
+  if (!guest) return null;
+
+  const guestRaw = storage.getItem(getStorageKey(guest.accountId));
+  if (!guestRaw) return null;
+
+  return safeJsonParse<any>(guestRaw);
 }
 
 function pickFinanceData(payload: RecoveredPayload): any | null {
@@ -111,6 +129,70 @@ const DebugRecovery = () => {
     [],
   );
 
+  const recoverOldWebsiteData = async () => {
+    appendLog(`开始尝试恢复旧域名数据: ${OLD_NETLIFY_ORIGIN}`);
+
+    if (window.location.origin === OLD_NETLIFY_ORIGIN) {
+      const direct = extractGuestFinanceDataFromLocalStorage(window.localStorage);
+      if (!direct) {
+        appendLog('旧域名下未检测到游客数据。');
+        return;
+      }
+      setInput(JSON.stringify({ bestGuess: { financeData: direct } }, null, 2));
+      appendLog('已从当前旧域名 localStorage 读取游客数据并填充。');
+      return;
+    }
+
+    const popup = window.open(`${OLD_NETLIFY_ORIGIN}/?recoveryBridge=1`, 'fwc-recovery', 'width=480,height=720');
+    if (!popup) {
+      appendLog('无法打开旧域名窗口（可能被浏览器拦截弹窗）。');
+      return;
+    }
+
+    appendLog('已打开旧域名窗口，等待数据回传。');
+
+    const result = await new Promise<any | null>((resolve) => {
+      let settled = false;
+      let ticker: number | null = null;
+
+      const cleanup = () => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener('message', onMessage);
+        if (ticker !== null) window.clearInterval(ticker);
+      };
+
+      const onMessage = (event: MessageEvent) => {
+        if (event.origin !== OLD_NETLIFY_ORIGIN) return;
+        if (!event.data || event.data.type !== RECOVERY_RESPONSE_TYPE) return;
+        cleanup();
+        resolve(event.data.payload || null);
+      };
+
+      window.addEventListener('message', onMessage);
+
+      ticker = window.setInterval(() => {
+        popup.postMessage({ type: RECOVERY_REQUEST_TYPE }, OLD_NETLIFY_ORIGIN);
+      }, 700);
+
+      window.setTimeout(() => {
+        cleanup();
+        resolve(null);
+      }, 12000);
+    });
+
+    popup.close();
+
+    if (!result) {
+      appendLog('未能自动获取旧域名 localStorage（可能旧站不可达或无桥接脚本）。');
+      appendLog('请使用 `npm run recover:localstorage` 导出 JSON 后再粘贴到此页。');
+      return;
+    }
+
+    setInput(JSON.stringify({ bestGuess: { financeData: result } }, null, 2));
+    appendLog('已获取旧域名游客数据并填充输入框。');
+  };
+
   const handleApply = () => {
     appendLog('开始恢复流程。');
     const parsed = safeJsonParse<RecoveredPayload>(input);
@@ -132,10 +214,7 @@ const DebugRecovery = () => {
 
     localStorage.setItem(guestKey, JSON.stringify(merged));
     localStorage.removeItem(MIGRATION_DONE_KEY);
-    localStorage.setItem(
-      AUTH_KEY,
-      JSON.stringify({ currentUser: guest, isLoggedIn: false }),
-    );
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ currentUser: guest, isLoggedIn: false }));
 
     const txCount = Array.isArray(merged?.transactions) ? merged.transactions.length : 0;
     appendLog(`已写入游客账本: key=${guestKey}`);
@@ -158,9 +237,10 @@ const DebugRecovery = () => {
             placeholder={sample}
             className="w-full min-h-64 rounded-md border bg-muted/30 p-3 text-sm font-mono"
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={handleApply}>写入游客默认数据</Button>
             <Button variant="secondary" onClick={() => setInput(sample)}>填充示例</Button>
+            <Button variant="secondary" onClick={recoverOldWebsiteData}>恢复旧网页数据</Button>
             <Button variant="outline" onClick={() => navigate('/')}>返回首页</Button>
           </div>
         </Card>

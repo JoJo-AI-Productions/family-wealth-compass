@@ -107,7 +107,8 @@ Paste either:
 - the full export report (`bestGuess.financeData`), or
 - a direct finance state JSON object (`{ transactions, categories, ... }`).
 
-Click **写入游客默认数据**. The page will:
+Click **恢复旧网页数据** to try auto-fetch from `family-wealth-compass-001.netlify.app` first.
+If fetch fails, paste exported JSON and click **写入游客默认数据**. The page will:
 - ensure a guest account exists,
 - merge imported transactions into guest storage,
 - switch current session to guest,
