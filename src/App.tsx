@@ -10,6 +10,7 @@ import YearDetail from "./pages/YearDetail";
 import DayDetail from "./pages/DayDetail";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import DebugRecovery from "./pages/DebugRecovery";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/year-detail" element={<YearDetail />} />
               <Route path="/day-detail" element={<DayDetail />} />
+              <Route path="/debug/recovery" element={<DebugRecovery />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
