@@ -71,3 +71,44 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Recover old Netlify localStorage data (Scheme B)
+
+When the old Netlify domain cannot be opened, but your browser profile still has local data,
+you can extract candidate `localStorage` payloads from Chromium LevelDB files.
+
+```sh
+npm run recover:localstorage
+```
+
+Advanced usage:
+
+```sh
+node scripts/export-netlify-localstorage.mjs \
+  --origin https://family-wealth-compass-001.netlify.app \
+  --browser chrome \
+  --profile "/path/to/Chrome/Default" \
+  --output ./debug/localstorage-export.json \
+  --debug
+```
+
+The script writes a JSON report with:
+- summary counters
+- `bestGuess.financeData` (if recoverable)
+- raw findings for debugging and issue diagnosis
+
+## Import recovered data into guest default account
+
+After exporting JSON, open the app in development mode and visit:
+
+- `/debug/recovery`
+
+Paste either:
+- the full export report (`bestGuess.financeData`), or
+- a direct finance state JSON object (`{ transactions, categories, ... }`).
+
+Click **写入游客默认数据**. The page will:
+- ensure a guest account exists,
+- merge imported transactions into guest storage,
+- switch current session to guest,
+- print debug logs both on page and in browser console.
