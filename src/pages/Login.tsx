@@ -169,6 +169,17 @@ const Login = () => {
                 注册账号为8位数字，密码为6位数字，与游客账号（6位）区分
               </p>
             )}
+
+
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => navigate('/debug/recovery')}
+                className="text-xs text-muted-foreground hover:text-primary hover:underline"
+              >
+                数据恢复调试入口
+              </button>
+            </div>
           </div>
         </div>
       </div>
